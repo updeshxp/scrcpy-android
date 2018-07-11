@@ -1,6 +1,6 @@
 # scrcpy-android
 
-- This application is android port to desktop applicaton [scrcpy](https://github.com/Genymobile/scrcpy).
+- This application is android port to desktop applicaton [**Scrcpy**](https://github.com/Genymobile/scrcpy).
 
 - This applicatiion mirrors display and touch controls from a target android device to scrcpy-android device.
 
@@ -22,7 +22,7 @@
 
 - Open scrcpy app and enter ip address of device to be mirrored.
 
-- Select display parametrs and birate from drop-down menu.(1280x720 and 2Mbps works best.)
+- Select display parameters and bitrate from drop-down menu.(1280x720 and 2Mbps works best.)
 
 - Set **Navbar** switch if the device to be mirrored has only hardware navigation buttons.
 
