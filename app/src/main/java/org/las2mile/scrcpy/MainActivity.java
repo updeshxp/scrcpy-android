@@ -15,6 +15,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -30,8 +31,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
-
-import org.las2mile.scrcpy.adblib.SendCommands;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,12 +61,13 @@ public class MainActivity extends Activity implements Scrcpy.ServiceCallbacks, S
     private String localip;
     private Context context;
     private String serverAdr = null;
-    private FileServer fileServer;
     private InputStream inputStream;
     private SurfaceView surfaceView;
     private Surface surface;
     private Scrcpy scrcpy;
     private long timestamp = 0;
+    private byte[] fileBase64;
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -98,10 +98,12 @@ public class MainActivity extends Activity implements Scrcpy.ServiceCallbacks, S
             AssetManager assetManager = getAssets();
             try {
                 inputStream = assetManager.open("scrcpy-server.jar");
+                byte[] buffer = new byte[inputStream.available()];
+                inputStream.read(buffer);
+                fileBase64 = Base64.encode(buffer, 2);
             } catch (IOException e) {
                 Log.e("Asset Manager", e.getMessage());
             }
-            fileServer = new FileServer(inputStream);
             sendCommands = new SendCommands();
             startButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -109,8 +111,7 @@ public class MainActivity extends Activity implements Scrcpy.ServiceCallbacks, S
                     localip = wifiIpAddress();
                     getAttributes();
                     if (!serverAdr.isEmpty()) {
-                        fileServer.startServingFile(serverAdr);
-                        if (sendCommands.SendAdbCommands(context, serverAdr, localip, videoBitrate, Math.max(screenHeight, screenWidth)) == 0) {
+                        if (sendCommands.SendAdbCommands(context, fileBase64, serverAdr, localip, videoBitrate, Math.max(screenHeight, screenWidth)) == 0) {
                             if (nav) {
                                 startwithNav();
                             } else {

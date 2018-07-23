@@ -1,7 +1,12 @@
-package org.las2mile.scrcpy.adblib;
+package org.las2mile.scrcpy;
 
 import android.content.Context;
 import android.util.Log;
+
+import org.las2mile.scrcpy.adblib.AdbBase64;
+import org.las2mile.scrcpy.adblib.AdbConnection;
+import org.las2mile.scrcpy.adblib.AdbCrypto;
+import org.las2mile.scrcpy.adblib.AdbStream;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -70,19 +75,18 @@ public class SendCommands {
     }
 
 
-    public int SendAdbCommands(Context context, final String ip, String localip, int bitrate, int size) {
+    public int SendAdbCommands(Context context, final byte[] fileBase64, final String ip, String localip, int bitrate, int size) {
         this.context = context;
         status = 1;
         final StringBuilder command = new StringBuilder();
-        command.append(" cd data/local/tmp && curl -o scrcpy-server.jar " + localip + ":10025/scrcpy-server.jar ");
-        command.append(" && CLASSPATH=/data/local/tmp/scrcpy-server.jar app_process / org.las2mile.scrcpy.Server ");
+        command.append(" CLASSPATH=/data/local/tmp/scrcpy-server.jar app_process / org.las2mile.scrcpy.Server ");
         command.append(" /" + localip + " " + Long.toString(size) + " " + Long.toString(bitrate) + ";");
 
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    adbWrite(ip, command.toString());
+                    adbWrite(ip, fileBase64, command.toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -99,7 +103,7 @@ public class SendCommands {
     }
 
 
-    private void adbWrite(String ip, String command) throws IOException {
+    private void adbWrite(String ip, byte[] fileBase64, String command) throws IOException {
 
         AdbConnection adb = null;
         Socket sock = null;
@@ -184,13 +188,50 @@ public class SendCommands {
         }
 
 
-        if (stream != null)
+        if (stream != null) {
+            int len = fileBase64.length;
+            byte[] filePart = new byte[4056];
+            int sourceOffset = 0;
             try {
+                stream.write(" cd data/local/tmp " + '\n');
+                while (sourceOffset < len) {
+                    if (len - sourceOffset >= 4056) {
+                        System.arraycopy(fileBase64, sourceOffset, filePart, 0, 4056);  //Writing in 4KB pieces. 4096-40  ---> 40 Bytes for actual command text.
+                        sourceOffset = sourceOffset + 4056;
+                        String ServerBase64part = new String(filePart, "US-ASCII");
+                        stream.write(" echo " + ServerBase64part + " >> serverBase64" + '\n');
+                        done = false;
+                        while (!done) {
+                            byte[] responseBytes = stream.read();
+                            String response = new String(responseBytes, "US-ASCII");
+                            if (response.endsWith("$ ") || response.endsWith("# ")) {
+                                done = true;
+                            }
+                        }
+                    } else {
+                        int rem = len - sourceOffset;
+                        byte[] remPart = new byte[rem];
+                        System.arraycopy(fileBase64, sourceOffset, remPart, 0, rem);
+                        sourceOffset = sourceOffset + rem;
+                        String ServerBase64part = new String(remPart, "US-ASCII");
+                        stream.write(" echo " + ServerBase64part + " >> serverBase64" + '\n');
+                        done = false;
+                        while (!done) {
+                            byte[] responseBytes = stream.read();
+                            String response = new String(responseBytes, "US-ASCII");
+                            if (response.endsWith("$ ") || response.endsWith("# ")) {
+                                done = true;
+                            }
+                        }
+                    }
+                }
+                stream.write(" base64 -d < serverBase64 > scrcpy-server.jar && rm serverBase64" + '\n');
                 stream.write(command + '\n');
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
                 return;
             }
+	}
 
         status = 0;
 
