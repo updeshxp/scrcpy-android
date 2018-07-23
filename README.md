@@ -6,12 +6,10 @@
 
 - scrcpy-android uses ADB-Connect interface to connect to android device to be mirrored.
 
-- Ths app is incomplete, has issues and non-recomended stuff in code.
-
 
 ## Download
 
-[scrcpy-release.apk](https://gitlab.com/las2mile/scrcpy-android/raw/master/release/scrcpy-release.apk)
+[scrcpy-release-v1.1.apk](https://gitlab.com/las2mile/scrcpy-android/raw/master/release/scrcpy-release.apk)
 
 
 ## Instructions to use
@@ -28,7 +26,7 @@
 
 - Hit **start** button.
 
-- Accept and trust(check always allow from this computer) the ADB connection prompt on target device.(Some custom roms don't have this prompt.)
+- Accept and trust(check always allow from this computer) the ADB connection prompt on target device(Some custom roms don't have this prompt).
 
 - Thats all! You should be seeing the screen of target android device.
 
