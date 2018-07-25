@@ -2,7 +2,7 @@
 
 - This application is android port to desktop applicaton [**Scrcpy**](https://github.com/Genymobile/scrcpy).
 
-- This applicatiion mirrors display and touch controls from a target android device to scrcpy-android device.
+- This application mirrors display and touch controls from a target android device to scrcpy-android device.
 
 - scrcpy-android uses ADB-Connect interface to connect to android device to be mirrored.
 
