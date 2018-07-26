@@ -87,6 +87,9 @@ public class EventController {
                         }
 
                     } else {
+                        if (action == MotionEvent.ACTION_DOWN) {
+                            lastMouseDown = now;
+                        }
                         int button = buffer[1];
                         int X = buffer[2];
                         int Y = buffer[3];
